@@ -7,8 +7,7 @@ import { IAccessCandidate, IACL, TAccessLevel, TAccessResult, TAccessRole } from
 import { StorageData, StorageMetadata } from '@sre/types/Storage.types';
 import { AccessRequest } from '@sre/Security/AccessControl/AccessRequest.class';
 import { SecureConnector } from '@sre/Security/SecureConnector.class';
-import { google } from 'googleapis';
-import { OAuth2Client } from 'google-auth-library';
+import { google, Auth } from 'googleapis';
 
 const console = Logger('GoogleSheet');
 
@@ -21,7 +20,7 @@ export type GoogleSheetConfig = {
 export class GoogleSheet extends StorageConnector {
     public name = 'GoogleSheet';
     private isInitialized = false;
-    private oauth2Client: OAuth2Client;
+    private oauth2Client: Auth.OAuth2Client;
 
     constructor(protected _settings?: GoogleSheetConfig) {
         super(_settings);
@@ -70,10 +69,11 @@ export class GoogleSheet extends StorageConnector {
         if (!this.isInitialized) throw new Error('GoogleSheet connector is not initialized.');
 
         const { spreadsheetId, range } = this.parseResourceId(resourceId);
-        const sheets = google.sheets({ version: 'v4', auth: this.oauth2Client });
+        const sheets = google.sheets('v4');
 
         try {
             const response = await sheets.spreadsheets.values.get({
+                auth: this.oauth2Client,
                 spreadsheetId,
                 range,
             });
@@ -100,10 +100,11 @@ export class GoogleSheet extends StorageConnector {
         if (!this.isInitialized) return undefined;
 
         const { spreadsheetId } = this.parseResourceId(resourceId);
-        const sheets = google.sheets({ version: 'v4', auth: this.oauth2Client });
+        const sheets = google.sheets('v4');
 
         try {
             const response = await sheets.spreadsheets.values.get({
+                auth: this.oauth2Client,
                 spreadsheetId,
                 range: `${this.METADATA_SHEET_NAME}!A:B`,
             });
@@ -132,7 +133,7 @@ export class GoogleSheet extends StorageConnector {
         if (!this.isInitialized) return;
 
         const { spreadsheetId } = this.parseResourceId(resourceId);
-        const sheets = google.sheets({ version: 'v4', auth: this.oauth2Client });
+        const sheets = google.sheets('v4');
 
         // First, try to get existing metadata to merge
         const existingMetadata = (await this.getMetadata(acRequest, resourceId)) || {};
@@ -142,6 +143,7 @@ export class GoogleSheet extends StorageConnector {
         try {
             // Try to update existing metadata first
             const getResponse = await sheets.spreadsheets.values.get({
+                auth: this.oauth2Client,
                 spreadsheetId,
                 range: `${this.METADATA_SHEET_NAME}!A:A`,
             });
@@ -152,6 +154,7 @@ export class GoogleSheet extends StorageConnector {
             if (rowIndex !== -1) {
                 // Update existing row
                 await sheets.spreadsheets.values.update({
+                    auth: this.oauth2Client,
                     spreadsheetId,
                     range: `${this.METADATA_SHEET_NAME}!B${rowIndex + 1}`,
                     valueInputOption: 'RAW',
@@ -162,6 +165,7 @@ export class GoogleSheet extends StorageConnector {
             } else {
                 // Append new row
                 await sheets.spreadsheets.values.append({
+                    auth: this.oauth2Client,
                     spreadsheetId,
                     range: `${this.METADATA_SHEET_NAME}!A:B`,
                     valueInputOption: 'RAW',
@@ -182,10 +186,11 @@ export class GoogleSheet extends StorageConnector {
     }
 
     private async createMetadataSheetAndAddMetadata(spreadsheetId: string, resourceId: string, metadataJson: string) {
-        const sheets = google.sheets({ version: 'v4', auth: this.oauth2Client });
+        const sheets = google.sheets('v4');
         try {
             // Create the .metadata sheet
             await sheets.spreadsheets.batchUpdate({
+                auth: this.oauth2Client,
                 spreadsheetId,
                 requestBody: {
                     requests: [{
@@ -201,6 +206,7 @@ export class GoogleSheet extends StorageConnector {
 
             // Add the metadata
             await sheets.spreadsheets.values.append({
+                auth: this.oauth2Client,
                 spreadsheetId,
                 range: `${this.METADATA_SHEET_NAME}!A:B`,
                 valueInputOption: 'RAW',
@@ -220,7 +226,7 @@ export class GoogleSheet extends StorageConnector {
         if (!this.isInitialized) throw new Error('GoogleSheet connector is not initialized.');
 
         const { spreadsheetId, range } = this.parseResourceId(resourceId);
-        const sheets = google.sheets({ version: 'v4', auth: this.oauth2Client });
+        const sheets = google.sheets('v4');
 
         // Convert CSV string to array of arrays
         const csv = value.toString();
@@ -228,6 +234,7 @@ export class GoogleSheet extends StorageConnector {
 
         try {
             await sheets.spreadsheets.values.update({
+                auth: this.oauth2Client,
                 spreadsheetId,
                 range,
                 valueInputOption: 'RAW',
@@ -247,9 +254,10 @@ export class GoogleSheet extends StorageConnector {
 
         try {
             const { spreadsheetId, range } = this.parseResourceId(resourceId);
-            const sheets = google.sheets({ version: 'v4', auth: this.oauth2Client });
+            const sheets = google.sheets('v4');
 
             await sheets.spreadsheets.values.clear({
+                auth: this.oauth2Client,
                 spreadsheetId,
                 range,
             });
@@ -265,15 +273,17 @@ export class GoogleSheet extends StorageConnector {
 
         try {
             const { spreadsheetId, range } = this.parseResourceId(resourceId);
-            const sheets = google.sheets({ version: 'v4', auth: this.oauth2Client });
+            const sheets = google.sheets('v4');
 
             // First, check if the spreadsheet exists
             await sheets.spreadsheets.get({
+                auth: this.oauth2Client,
                 spreadsheetId,
             });
 
             // Then, check if the range is valid by trying to read it
             await sheets.spreadsheets.values.get({
+                auth: this.oauth2Client,
                 spreadsheetId,
                 range,
             });

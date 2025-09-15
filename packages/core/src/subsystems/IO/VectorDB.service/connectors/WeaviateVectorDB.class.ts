@@ -279,7 +279,7 @@ export class WeaviateVectorDB extends VectorDBConnector {
             const preparedNs = this.constructNsName(acRequest.candidate as AccessCandidate, namespace);
             
             const schema = await this.client.schema.getter().do();
-            const classExists = schema.classes?.some((cls: any) => cls.class === preparedNs) || false;
+            const classExists = schema.classes?.some((cls: any) => cls.class.toLowerCase() === preparedNs.toLowerCase()) || false;
             
             logger.info(`WeaviateVectorDB :: ${acRequest.candidate.id} :: func.namespaceExists :: Success :: Namespace exists: ${classExists}`);
             return classExists;

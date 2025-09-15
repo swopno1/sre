@@ -322,7 +322,7 @@ export class WeaviateVectorDB extends VectorDBConnector {
             
             if (typeof query === 'string') {
                 // Generate embedding for text query
-                const embedding = await this.embedder.embed(query);
+                const embedding = await this.embedder.embedText(query, acRequest.candidate as AccessCandidate);
                 searchVector = embedding;
             } else {
                 searchVector = query;

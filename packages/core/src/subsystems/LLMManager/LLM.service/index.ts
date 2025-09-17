@@ -11,11 +11,13 @@ import { BedrockConnector } from './connectors/Bedrock.class';
 import { VertexAIConnector } from './connectors/VertexAI.class';
 import { PerplexityConnector } from './connectors/Perplexity.class';
 import { xAIConnector } from './connectors/xAI.class';
+import { CustomConnector } from './connectors/Custom.class';
 
 export class LLMService extends ConnectorServiceProvider {
     public register() {
         ConnectorService.register(TConnectorService.LLM, 'Echo', EchoConnector);
         ConnectorService.register(TConnectorService.LLM, 'OpenAI', OpenAIConnector);
+        ConnectorService.register(TConnectorService.LLM, 'Custom', CustomConnector);
         ConnectorService.register(TConnectorService.LLM, 'DeepSeek', OpenAIConnector);
         ConnectorService.register(TConnectorService.LLM, 'GoogleAI', GoogleAIConnector);
         ConnectorService.register(TConnectorService.LLM, 'Anthropic', AnthropicConnector);
@@ -31,6 +33,7 @@ export class LLMService extends ConnectorServiceProvider {
         //auto initialize built-in models
         ConnectorService.init(TConnectorService.LLM, 'Echo');
         ConnectorService.init(TConnectorService.LLM, 'OpenAI');
+        ConnectorService.init(TConnectorService.LLM, 'Custom');
         ConnectorService.init(TConnectorService.LLM, 'DeepSeek');
         ConnectorService.init(TConnectorService.LLM, 'GoogleAI');
         ConnectorService.init(TConnectorService.LLM, 'Anthropic');

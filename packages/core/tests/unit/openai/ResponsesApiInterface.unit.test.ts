@@ -148,8 +148,6 @@ describe('ResponsesApiInterface - Unit Tests', () => {
                 model: 'gpt-4o',
                 input: [{ role: 'user', content: 'Hello' }],
                 max_output_tokens: 100,
-                temperature: 0.7,
-                top_p: 0.9,
             });
         });
 

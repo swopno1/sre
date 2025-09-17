@@ -205,8 +205,8 @@ export class ChatCompletionsApiInterface extends OpenAIApiInterface {
                     description: tool.description,
                     parameters: {
                         type: 'object',
-                        properties: tool.properties || {},
-                        required: tool.requiredFields || [],
+                        properties: tool.properties,
+                        required: tool.requiredFields,
                     },
                 },
             };

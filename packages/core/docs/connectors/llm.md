@@ -106,6 +106,38 @@ The LLM (Large Language Model) subsystem provides access to various language mod
 
 ---
 
+### Custom
+
+**Role**: Custom OpenAI-compatible API connector
+**Summary**: Provides access to any OpenAI-compatible API, including local AI servers like Ollama or vLLM.
+
+**Configuration**: No constructor settings. Requires a `baseURL` and optionally an `apiKey` in the model configuration.
+
+**Example Model Entry for a local server:**
+
+```json
+{
+    "local-llama": {
+        "label": "Local Llama",
+        "llm": "Custom",
+        "modelId": "llama2",
+        "credentials": "Internal",
+        "baseURL": "http://localhost:11434/v1",
+        "params": {
+            "temperature": 0.8
+        }
+    }
+}
+```
+
+**Use Cases:**
+
+-   Running agents with local AI models for privacy and cost savings
+-   Testing new or fine-tuned models that are not yet available through a major provider
+-   Connecting to custom, in-house AI model deployments
+
+---
+
 ### GoogleAI
 
 **Role**: Google AI (Gemini) connector  

@@ -247,6 +247,7 @@ export const BuiltinLLMProviders = {
     VertexAI: 'VertexAI',
     xAI: 'xAI',
     Perplexity: 'Perplexity',
+    Custom: 'Custom',
 } as const;
 // Base provider type
 export type TBuiltinLLMProvider = (typeof BuiltinLLMProviders)[keyof typeof BuiltinLLMProviders];

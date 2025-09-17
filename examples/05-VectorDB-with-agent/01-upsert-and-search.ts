@@ -16,6 +16,7 @@ const pineconeSettings = {
     indexName: 'demo-vec',
     apiKey: process.env.PINECONE_API_KEY,
     embeddings: Model.OpenAI('text-embedding-3-large'),
+    //you can also use Model.GoogleAI('gemini-embedding-001', { dimensions: 1024 })
 };
 
 async function createAgent() {

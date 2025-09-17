@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { BaseEmbedding, TEmbeddings } from './BaseEmbedding';
 import { AccessCandidate } from '@sre/Security/AccessControl/AccessCandidate.class';
 import { getLLMCredentials } from '@sre/LLMManager/LLM.service/LLMCredentials.helper';
@@ -7,9 +7,10 @@ import { TLLMCredentials, TLLMModel, BasicCredentials } from '@sre/types/LLM.typ
 const DEFAULT_MODEL = 'gemini-embedding-001';
 
 export class GoogleEmbeds extends BaseEmbedding {
-    protected client: GoogleGenerativeAI;
+    protected client: GoogleGenAI;
 
-    public static models = ['gemini-embedding-001'];
+    // Keep in sync with Gemini API supported embedding models
+    public static models = ['gemini-embedding-001', 'text-embedding-005', 'text-multilingual-embedding-002'];
     public canSpecifyDimensions = true;
 
     constructor(private settings?: Partial<TEmbeddings>) {
@@ -43,7 +44,7 @@ export class GoogleEmbeds extends BaseEmbedding {
 
     protected async embed(texts: string[], candidate: AccessCandidate): Promise<number[][]> {
         let apiKey: string | undefined;
-        
+
         // Try to get from credentials first
         try {
             const modelInfo: TLLMModel = {
@@ -56,37 +57,62 @@ export class GoogleEmbeds extends BaseEmbedding {
         } catch (e) {
             // If credential system fails, fall back to environment variable
         }
-        
+
         // Fall back to environment variable if not found in credentials
         if (!apiKey) {
             apiKey = process.env.GOOGLE_AI_API_KEY;
         }
-        
+
         if (!apiKey) {
             throw new Error('Please provide an API key for Google AI embeddings via credentials or GOOGLE_AI_API_KEY environment variable');
         }
 
         if (!this.client) {
-            this.client = new GoogleGenerativeAI(apiKey);
+            this.client = new GoogleGenAI({ apiKey });
         }
 
         try {
-            const model = this.client.getGenerativeModel({ model: this.model });
-            
-            const embeddings: number[][] = [];
-            
-            for (const text of texts) {
-                const result = await model.embedContent(text);
-                if (result?.embedding?.values) {
-                    embeddings.push(result.embedding.values);
-                } else {
-                    throw new Error('Invalid embedding response from Google AI');
-                }
-            }
-            
-            return embeddings;
+            const outputDimensionality = this.dimensions && Number.isFinite(this.dimensions) ? this.dimensions : undefined;
+
+            // Batch request using the new SDK
+            const res = await this.client.models.embedContent({
+                model: this.model,
+                contents: texts,
+                ...(outputDimensionality ? { outputDimensionality } : {}),
+            });
+
+            // The SDK can return either { embedding } for single or { embeddings } for batch
+            const vectors: number[][] = Array.isArray((res as any).embeddings)
+                ? (res as any).embeddings.map((e: any) => e.values as number[])
+                : [((res as any).embedding?.values as number[]) || []];
+
+            // Enforce dimensions and normalization when requested or when non-3072
+            const targetDim = outputDimensionality;
+            const processed = vectors.map((v) => this.postProcessEmbedding(v, targetDim));
+
+            return processed;
         } catch (e) {
             throw new Error(`Google Embeddings API error: ${e.message || e}`);
         }
+    }
+
+    private postProcessEmbedding(values: number[], targetDim?: number): number[] {
+        let v = Array.isArray(values) ? values.slice() : [];
+        if (targetDim && targetDim > 0) {
+            if (v.length > targetDim) {
+                // SDK ignored smaller dimension: truncate
+                v = v.slice(0, targetDim);
+            } else if (v.length < targetDim) {
+                // SDK returned shorter vector: pad with zeros
+                v = v.concat(Array(targetDim - v.length).fill(0));
+            }
+        }
+        // Normalize for non-default 3072 dims (recommended by Google docs)
+        const needNormalize = (targetDim && targetDim !== 3072) || (!targetDim && v.length !== 3072);
+        if (needNormalize && v.length > 0) {
+            const norm = Math.sqrt(v.reduce((acc, x) => acc + x * x, 0));
+            if (norm > 0) v = v.map((x) => x / norm);
+        }
+        return v;
     }
 }

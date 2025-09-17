@@ -1,0 +1,9 @@
+{
+    "my-local-model": {
+        "label": "My Local Model",
+        "llm": "Custom",
+        "modelId": "phi-3-mini-instruct-Q4_K_M.gguf",
+        "credentials": "None",
+        "baseURL": "http://localhost:8080/v1"
+    }
+}

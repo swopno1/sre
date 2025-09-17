@@ -31,3 +31,14 @@ For instance, to run an example located at `01-agent-code-skill/01-prompting.ts`
 ```bash
 npm start ./01-agent-code-skill/01-prompting.ts
 ```
+
+---
+
+### 11. Custom LLM Connector
+
+This example demonstrates how to use the `Custom` LLM connector to connect to a local AI model that exposes an OpenAI-compatible API.
+
+-   **`11-custom-llm-connector/01-custom-llm-connector.ts`**: Shows how to configure and use the `Custom` connector with a local model.
+-   **`11-custom-llm-connector/models.json`**: An example `models.json` file that defines a model using the `Custom` connector.
+
+To run this example, you will need to have a local AI server running, such as Ollama or a `llama.cpp` server.

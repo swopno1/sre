@@ -282,7 +282,7 @@ export class Conversation extends EventEmitter {
         const reqMethods = this._reqMethods;
         const toolsConfig = this._toolsConfig;
         //deduplicate tools
-        toolsConfig.tools = toolsConfig.tools.filter((tool, index, self) => self.findIndex((t) => t.name === tool.name) === index);
+        toolsConfig.tools = toolsConfig.tools.filter((tool, index, self) => self.findIndex((t) => t.function.name === tool.function.name) === index);
         const endpoints = this._endpoints;
         const baseUrl = this._baseUrl;
         const message_id = 'msg_' + randomUUID();

@@ -1,24 +1,70 @@
 # How to run the tests
 
-Many tests in this repository rely on SRE vault file. the vault file stores API keys for the LLM providers and other third-party services.
+We have two types of tests here:
 
-in order to run the tests with LLM providers, you need to create a vault file in your user home directory under ~/.smyth/.sre/vault.json (%userprofile%/.smyth/.sre/vault.json on Windows)
+-   unit tests
+-   integration tests
 
-the file content should be like this:
+# Unit Tests
+
+The unit tests are located in the `tests/unit` folder and do not rely on external services (except APICall cases that use httpbin.org).
+
+Run from `packages/core`:
+
+```bash
+pnpm run test:unit
+pnpm run test:unit:watch
+```
+
+If you are an external contributor, please run unit tests before and after your changes to ensure nothing breaks.
+
+# Integration Tests
+
+The integration tests live in `tests/integration` and rely on external services (LLM providers, storage, etc.).
+
+**⚠️ Important: Integration tests require a Vault file for API keys before they can run.**
+
+## Vault setup (required for integration tests)
+
+Create a Vault file in your user home directory:
+
+-   macOS/Linux: `~/.smyth/.sre/vault.json`
+-   Windows: `%USERPROFILE%\.smyth\.sre\vault.json`
+
+Example `vault.json` (you can reference environment variables using `$env(VAR_NAME)`):
 
 ```json
+{
     "default": {
         "echo": "",
-        "openai": "",
-        "anthropic": "",
-        "googleai": "",
-        "groq": "",
-        "togetherai": "",
-        "xai": "",
-        "deepseek": "",
-    },
+        "openai": "...",
+        "anthropic": "...",
+        "googleai": "...",
+        "groq": "...",
+        "togetherai": "...",
+        "xai": "...",
+        "perplexity": "..."
+    }
+}
+```
+
+## Running integration tests
+
+Once your vault is configured, run from the repository root:
+
+```bash
+pnpm -F @smythos/sre test:integration
+pnpm -F @smythos/sre test:integration:watch
+```
+
+Or from `packages/core`:
+
+```bash
+pnpm run test:integration
+pnpm run test:integration:watch
 ```
 
 # Important Notes
 
-Running the tests that use LLMs providers incure costs.
+-   Running LLM integration tests may incur costs with your providers.
+-   Always use pnpm in this monorepo.

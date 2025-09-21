@@ -27,8 +27,6 @@
         "build:types": "tsc --emitDeclarationOnly --declaration --outDir dist/types -p tsconfig.dts.json",
         "build:jsbundle": "cross-env rollup -c",
         "build": "pnpm run build:jsbundle && pnpm run build:types",
-        "test": "cd ../.. && vitest run packages/core",
-        "test:watch": "cd ../.. && vitest watch packages/core",
         "test:unit": "cd ../.. && vitest run packages/core/tests/unit",
         "test:unit:watch": "cd ../.. && vitest watch packages/core/tests/unit",
         "test:integration": "cd ../.. && vitest run packages/core/tests/integration",

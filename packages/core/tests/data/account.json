@@ -28,6 +28,13 @@
             "setting2": "value2"
         }
     },
+    "TeamAPICall": {
+        "agents": {
+            "image-agent": {
+                "settings": {}
+            }
+        }
+    },
     "Team2": {
         "users": {
             "user1": {
@@ -43,6 +50,9 @@
                     "setting1": "value1",
                     "setting2": "value2"
                 }
+            },
+            "agent-007": {
+                "settings": {}
             }
         }
     },

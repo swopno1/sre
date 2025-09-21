@@ -4,19 +4,19 @@ import { JSONFilter } from '@sre/Components/JSONFilter.class';
 
 import { Agent } from '@sre/AgentManager/Agent.class';
 import { setupSRE } from '../../utils/sre';
+import { ConnectorService } from '@sre/Core/ConnectorsService';
 
 setupSRE();
 
 // Mock Agent class to keep the test isolated from the actual Agent implementation
 vi.mock('@sre/AgentManager/Agent.class', () => {
-    const MockedAgent = vi.fn().mockImplementation(() => {
-        // Inherit Agent.prototype for proper instanceof Agent checks
-        return Object.create(Agent.prototype, {
-            id: { value: 1 }, // used inside inferBinaryType()
-            agentRuntime: { value: { debug: true } }, // used inside createComponentLogger()
-        });
-    });
-    return { default: MockedAgent };
+    const MockedAgent = vi.fn().mockImplementation(() => ({
+        id: 'agent-0000',
+        agentRuntime: { debug: true }, // used inside createComponentLogger()
+        isKilled: () => false,
+        modelsProvider: ConnectorService.getModelsProviderConnector(),
+    }));
+    return { Agent: MockedAgent };
 });
 
 describe('jsonFilter: filter some specific properties from a JSON Object', () => {

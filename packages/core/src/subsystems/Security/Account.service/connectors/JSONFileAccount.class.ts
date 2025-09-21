@@ -78,6 +78,10 @@ export class JSONFileAccount extends AccountConnector {
 
         if (!this.data[team]) return false;
 
+        if (candidate.role === TAccessRole.Team && team === candidate.id) {
+            return true;
+        }
+
         if (candidate.role === TAccessRole.User) {
             return !!this.data[team].users?.[candidate.id];
         } else if (candidate.role === TAccessRole.Agent) {

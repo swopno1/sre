@@ -7,6 +7,7 @@ import { APICall } from '@sre/Components/APICall/APICall.class';
 import { setupSRE } from '../../utils/sre';
 import { ConnectorService } from '@sre/Core/ConnectorsService';
 import { testData } from '../../utils/test-data-manager';
+import { AccessCandidate, SmythFS } from 'index';
 
 const app = express();
 const BASE_URL = `http://agents-server.smyth.stage`;
@@ -677,7 +678,9 @@ describe('APICall Component - URL Formats', () => {
     });
 
     it('resolve smythfs:// URI in public URL', async () => {
-        const url = 'https://httpbin.org/get?image=smythfs://Team2.team/agent-123456/_temp/M4I8A5XIDKJ.jpeg';
+        // write a file in Smyth File System (will be used to test smythfs:// uris passed as arguments)
+        await SmythFS.Instance.write('smythfs://Team2.team/agent-123456/_temp/file.txt', 'Hello, world!', AccessCandidate.agent('agent-123456'));
+        const url = 'https://httpbin.org/get?image=smythfs://Team2.team/agent-123456/_temp/file.txt';
         const config = {
             data: {
                 method: 'GET',
@@ -693,11 +696,15 @@ describe('APICall Component - URL Formats', () => {
         const response = output.Response;
 
         const regex = new RegExp(`${BASE_URL}`);
+
+        // delete the file
+        await SmythFS.Instance.delete('smythfs://Team2.team/agent-123456/_temp/file.txt', AccessCandidate.agent('agent-123456'));
         expect(response.args.image).toMatch(regex);
     });
 
     it('does not resolve smythfs:// URI if it does not belong to the agent', async () => {
-        const url = 'https://httpbin.org/get?image=smythfs://AnotherTeam.team/agent-123456/_temp/M4I8A5XIDKJ.jpeg';
+        await SmythFS.Instance.write('smythfs://Team2.team/agent-007/_temp/file.txt', 'Hello, world!', AccessCandidate.agent('agent-007'));
+        const url = 'https://httpbin.org/get?image=smythfs://AnotherTeam.team/agent-007/_temp/M4I8A5XIDKJ.jpeg';
         const config = {
             data: {
                 method: 'GET',
@@ -713,7 +720,11 @@ describe('APICall Component - URL Formats', () => {
         const response = output.Response;
 
         const regex = new RegExp(`${BASE_URL}`);
-        expect(response.args.image).toMatch(regex);
+        // delete the file
+        await SmythFS.Instance.delete('smythfs://Team2.team/agent-007/_temp/file.txt', AccessCandidate.agent('agent-007'));
+        expect(response).toBeUndefined();
+        expect(output).toHaveProperty('_error');
+        expect(output._error).toContain('Access Denied');
     });
 });
 
@@ -921,12 +932,15 @@ describe('APICall Component - Body', () => {
     });
 
     it('handle multipart/form-data with smythfs:// URI', async () => {
+        const imageData = testData.readBinaryData('smythos.png');
+        await SmythFS.Instance.write('smythfs://Team2.team/agent-123456/_temp/smythos.png', imageData, AccessCandidate.agent('agent-123456'));
+
         const input = {
             image: {
-                mimetype: 'image/jpeg',
+                mimetype: 'image/png',
                 size: 13179,
-                url: 'smythfs://cloilcrl9001v9tkguilsu8dx.team/cm42ug6dg17rpvxncq2xmd9uo/_temp/M4B1LWF6DSR.jpeg',
-                name: 'M4B1LWF6DSR.jpeg',
+                url: 'smythfs://Team2.team/agent-123456/_temp/smythos.png',
+                name: 'smythos.png',
             },
         };
         const config = {
@@ -952,10 +966,13 @@ describe('APICall Component - Body', () => {
         const output = await apiCall.process(input, config, agent);
         const response = output.Response;
 
+        // delete the file
+        await SmythFS.Instance.delete('smythfs://Team2.team/agent-123456/_temp/smythos.png', AccessCandidate.agent('agent-123456'));
+
         expect(response.headers['Content-Type']).toMatch(/^multipart\/form-data; boundary=/);
         expect(response).toHaveProperty('files');
         expect(response.files).toHaveProperty('image');
-        expect(response.files.image).toMatch(/^data:image\/jpeg;base64,/);
+        expect(response.files.image).toMatch(/^data:image\/png;base64,/);
     });
 
     it('handle binary content type with base64 input', async () => {
@@ -1480,6 +1497,10 @@ describe('APICall Component - Body', () => {
     });
 });
 
+/*
+//OAuth tests and proxy tests need to be re-implemented
+//the oauth approach below is deprecated
+
 describe('APICall Component - OAuth', () => {
     it('handle OAuth2 authentication', async () => {
         const config = {
@@ -1586,7 +1607,7 @@ describe('APICall Component - Proxy', () => {
         handleProxy(scheme, proxyUrl);
     }
 });
-
+*/
 describe('APICall Component - Error Handling', () => {
     it('handle network errors', async () => {
         const config = {

@@ -74,6 +74,8 @@ export class JSONFileAccount extends AccountConnector {
     }
 
     public async isTeamMember(team: string, candidate: IAccessCandidate): Promise<boolean> {
+        if (team === DEFAULT_TEAM_ID) return true; //everyone is a member of the default team
+
         if (!this.data[team]) return false;
 
         if (candidate.role === TAccessRole.User) {

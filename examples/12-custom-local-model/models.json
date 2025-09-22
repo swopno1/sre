@@ -1,0 +1,14 @@
+{
+    "local-llama": {
+        "provider": "OpenAI",
+        "modelId": "local-llama",
+        "baseURL": "http://localhost:8000/v1",
+
+        "tokens": 4096,
+        "completionTokens": 1024,
+
+        "enabled": true,
+        "features": ["text", "tools"],
+        "credentials": "vault"
+    }
+}

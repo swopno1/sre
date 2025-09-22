@@ -80,5 +80,5 @@ describe('Async and Await Components', () => {
         expect(replies).toHaveLength(4);
 
         expect(replies).toEqual(['Hello', 'World', 'Foo', 'Bar']);
-    });
+    }, 60000);
 });

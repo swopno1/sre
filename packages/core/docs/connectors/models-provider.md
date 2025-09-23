@@ -2,6 +2,9 @@
 
 The ModelsProvider subsystem manages LLM model configurations and availability.
 
+> If you are looking for how to configure custom models for a smythOS SDK project, take a look at this video.
+> [![Using Custom Models with SmythOS SDK](https://img.youtube.com/vi/dQQipoa2yp8/0.jpg)](https://www.youtube.com/watch?v=dQQipoa2yp8)
+
 ## Available Connectors
 
 ### JSONModelsProvider
@@ -37,6 +40,8 @@ SRE.init({
     },
 });
 ```
+
+> **Note**: If you are using SmythOS SDK, the SDK will initialize SRE for you with the default config, you only need to call SRE.init if you need to set custom configuration for the ModelsProvider connector.
 
 **Configuration Options:**
 

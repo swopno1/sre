@@ -27,8 +27,6 @@ export interface NsKnownMetadata {
 // }
 
 export interface QueryOptions {
-    filter?: any;
-    threshold?: number;
     topK?: number;
     includeMetadata?: boolean;
 }
@@ -51,8 +49,6 @@ export interface IVectorDataSourceDto {
     id: string;
     source: number[] | string;
     metadata?: VectorDBMetadata;
-    text?: any;
-    vector?: any;
 }
 
 export interface IStorageVectorDataSource {

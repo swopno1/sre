@@ -3,7 +3,6 @@
 import { MilvusConfig } from '@smythos/sre';
 import { PineconeConfig } from '@smythos/sre';
 import { RAMVectorDBConfig } from '@smythos/sre';
-import { WeaviateConfig } from '@smythos/sre';
 import { AccessCandidate } from '@smythos/sre';
 import { VectorDBInstance } from '../../VectorDB/VectorDBInstance.class';
 import { Scope } from '../SDKTypes';
@@ -13,7 +12,6 @@ export type TVectorDBProviderSettings = {
     Milvus: MilvusConfig
     Pinecone: PineconeConfig
     RAMVec: RAMVectorDBConfig
-    Weaviate: WeaviateConfig
 };
 
 export type TAllVectorDBProviderSettings = TVectorDBProviderSettings & IVectorDBProviders;
@@ -32,7 +30,6 @@ export const TVectorDBProvider: Record<TBuiltinVectorDBProvider, TBuiltinVectorD
     Milvus: 'Milvus',
     Pinecone: 'Pinecone',
     RAMVec: 'RAMVec',
-    Weaviate: 'Weaviate',
 } as const;
 
 // #endregion

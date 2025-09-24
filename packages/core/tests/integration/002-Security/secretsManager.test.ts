@@ -5,8 +5,9 @@ import { SecretsManager } from '@sre/Security/Vault.service/connectors/SecretsMa
 
 import { TemplateString } from '@sre/helpers/TemplateString.helper';
 import { ConnectorService, SmythRuntime } from 'index';
+import { setupSRE } from '../../utils/sre';
 
-const SREInstance = SmythRuntime.Instance.init({
+setupSRE({
     Vault: {
         Connector: 'SecretsManager',
         Settings: {
@@ -14,9 +15,6 @@ const SREInstance = SmythRuntime.Instance.init({
             secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
             region: process.env.AWS_REGION,
         },
-    },
-    Account: {
-        Connector: 'SmythAccount',
     },
 });
 

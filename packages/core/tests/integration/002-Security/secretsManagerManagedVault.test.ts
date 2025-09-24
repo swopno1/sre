@@ -4,8 +4,8 @@ import { SecretManagerManagedVault } from '@sre/Security/ManagedVault.service/co
 import { ConnectorService, SmythRuntime } from 'index';
 import { TemplateString } from '@sre/helpers/TemplateString.helper';
 import { ManagedVaultConnector } from '@sre/Security/ManagedVault.service/ManagedVaultConnector';
-
-const SREInstance = SmythRuntime.Instance.init({
+import { setupSRE } from '../../utils/sre';
+setupSRE({
     ManagedVault: {
         Connector: 'SecretManagerManagedVault',
         Settings: {
@@ -13,9 +13,6 @@ const SREInstance = SmythRuntime.Instance.init({
             secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
             region: process.env.AWS_REGION,
         },
-    },
-    Account: {
-        Connector: 'SmythAccount',
     },
 });
 

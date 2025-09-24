@@ -3,6 +3,9 @@ import { OpenAIEmbeds } from '@sre/IO/VectorDB.service/embed/OpenAIEmbedding';
 import { AccessCandidate } from '@sre/Security/AccessControl/AccessCandidate.class';
 import { getLLMCredentials } from '@sre/LLMManager/LLM.service/LLMCredentials.helper';
 import OpenAI, { OpenAI as OpenAIClient } from 'openai';
+import { checkIntegrationTestConsent } from '../../../utils/test-data-manager';
+
+checkIntegrationTestConsent();
 
 // Mock the OpenAI SDK
 vi.mock('openai', () => {

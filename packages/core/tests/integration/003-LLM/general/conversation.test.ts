@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { SmythRuntime, TLLMEvent } from 'index';
 import { Conversation } from '@sre/helpers/Conversation.helper';
-import { setupSRE } from '../../utils/sre';
+import { setupSRE } from '../../../utils/sre';
 import fs from 'fs';
-import { testData } from '../../utils/test-data-manager';
+import { testData, checkIntegrationTestConsent } from '../../../utils/test-data-manager';
+
+checkIntegrationTestConsent();
 
 setupSRE();
 const TIMEOUT = 30000;
@@ -114,15 +116,9 @@ function runTestCases(model: string) {
     );
 }
 
-const models = [
-    { provider: 'OpenAI', id: 'gpt-4o-mini' },
-    { provider: 'Anthropic', id: 'claude-3.5-haiku' },
-    { provider: 'GoogleAI', id: 'gemini-1.5-flash' },
-    /* { provider: 'Groq', id: 'gemma2-9b-it' },
-    { provider: 'TogetherAI', id: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo' }, */
-];
+import testModels from './testModels';
 
-for (const model of models) {
+for (const model of testModels) {
     describe(`Conversation Tests: ${model.provider} (${model.id})`, async () => {
         await runTestCases(model.id);
     });

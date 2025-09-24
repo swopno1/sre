@@ -4,9 +4,9 @@ import { AccessRequest } from '@sre/Security/AccessControl/AccessRequest.class';
 import { DEFAULT_TEAM_ID, IAccessCandidate, IACL, TAccessRole } from '@sre/types/ACL.types';
 import { AccountConnector } from '../AccountConnector';
 import { KeyValueObject } from '@sre/types/Common.types';
-
-export class AWSAccount extends AccountConnector {
-    public name = 'AWSAccount';
+//FIXME : this implementation is experimental and incomplete
+export class MySQLAccount extends AccountConnector {
+    public name = 'MySQLAccount';
 
     private pool: mysql.Pool;
 

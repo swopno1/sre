@@ -4,9 +4,9 @@ import { LLMInference } from '@sre/LLMManager/LLM.inference';
 import { AccessCandidate } from '@sre/Security/AccessControl/AccessCandidate.class';
 
 import { TLLMMessageRole } from '@sre/types/LLM.types';
-import { setupSRE } from '../../utils/sre';
-import { testData } from '../../utils/test-data-manager';
-
+import { setupSRE } from '../../../utils/sre';
+import { testData, checkIntegrationTestConsent } from '../../../utils/test-data-manager';
+checkIntegrationTestConsent();
 setupSRE();
 
 const agentId = 'cm0zjhkzx0dfvhxf81u76taiz';
@@ -142,16 +142,9 @@ async function runTestCases(model: string) {
     );
 }
 
-const models = [
-    { provider: 'OpenAI', id: 'gpt-4o-mini' },
-    { provider: 'Anthropic', id: 'claude-3.5-haiku' },
-    { provider: 'GoogleAI', id: 'gemini-1.5-flash' },
-    { provider: 'Groq', id: 'gemma2-9b-it' },
-    // { provider: 'TogetherAI', id: 'meta-llama/Meta-Llama-3-8B-Instruct-Lite' },
-    // { provider: 'xAI', id: 'grok-beta' },
-];
+import testModels from './testModels';
 
-for (const model of models) {
+for (const model of testModels) {
     describe(`LLM Prompt Tests: ${model.provider} (${model.id})`, async () => {
         await runTestCases(model.id);
     });

@@ -3,6 +3,9 @@ import { GoogleEmbeds } from '@sre/IO/VectorDB.service/embed/GoogleEmbedding';
 import { AccessCandidate } from '@sre/Security/AccessControl/AccessCandidate.class';
 import { getLLMCredentials } from '@sre/LLMManager/LLM.service/LLMCredentials.helper';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { checkIntegrationTestConsent } from '../../../utils/test-data-manager';
+
+checkIntegrationTestConsent();
 
 // Mock the Google AI SDK
 vi.mock('@google/generative-ai', () => ({
@@ -86,7 +89,9 @@ describe('GoogleEmbeds - Unit Tests', () => {
         });
 
         it('should have correct available models', () => {
-            expect(GoogleEmbeds.models).toEqual(['gemini-embedding-001']);
+            expect(GoogleEmbeds.models).toInclude('gemini-embedding-001');
+            expect(GoogleEmbeds.models).toInclude('text-embedding-005');
+            expect(GoogleEmbeds.models).toInclude('text-multilingual-embedding-002');
         });
     });
 
@@ -387,4 +392,3 @@ describe('GoogleEmbeds - Unit Tests', () => {
         });
     });
 });
-

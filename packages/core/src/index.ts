@@ -182,9 +182,9 @@ export * from './subsystems/MemoryManager/Cache.service/connectors/LocalStorageC
 export * from './subsystems/MemoryManager/Cache.service/connectors/RAMCache.class';
 export * from './subsystems/MemoryManager/Cache.service/connectors/RedisCache.class';
 export * from './subsystems/MemoryManager/Cache.service/connectors/S3Cache.class';
-export * from './subsystems/Security/Account.service/connectors/AWSAccount.class';
 export * from './subsystems/Security/Account.service/connectors/DummyAccount.class';
 export * from './subsystems/Security/Account.service/connectors/JSONFileAccount.class';
+export * from './subsystems/Security/Account.service/connectors/MySQLAccount.class';
 export * from './subsystems/Security/ManagedVault.service/connectors/NullManagedVault.class';
 export * from './subsystems/Security/ManagedVault.service/connectors/SecretManagerManagedVault';
 export * from './subsystems/Security/Vault.service/connectors/HashicorpVault.class';

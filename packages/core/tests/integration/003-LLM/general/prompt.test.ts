@@ -4,16 +4,16 @@ import { LLMInference } from '@sre/LLMManager/LLM.inference';
 import { AccessCandidate } from '@sre/Security/AccessControl/AccessCandidate.class';
 
 import { TLLMMessageRole } from '@sre/types/LLM.types';
-import { setupSRE } from '../../utils/sre';
-import { testData } from '../../utils/test-data-manager';
-
+import { setupSRE } from '../../../utils/sre';
+import { testData, checkIntegrationTestConsent } from '../../../utils/test-data-manager';
+checkIntegrationTestConsent();
 setupSRE();
 
 const agentId = 'cm0zjhkzx0dfvhxf81u76taiz';
 
 const TIMEOUT = 30000;
 const LLM_OUTPUT_VALIDATOR = 'Yohohohooooo!';
-const WORD_INCLUSION_PROMPT = `\nThe response must includes "${LLM_OUTPUT_VALIDATOR}". If the response is JSON, then include an additional key-value pair with key as "${LLM_OUTPUT_VALIDATOR}" and value as "${LLM_OUTPUT_VALIDATOR}"`;
+const WORD_INCLUSION_PROMPT = `\nAll your responses response must includes "${LLM_OUTPUT_VALIDATOR}". If the response is JSON, then include an additional key-value pair with key as "${LLM_OUTPUT_VALIDATOR}" and value as "${LLM_OUTPUT_VALIDATOR}"\n\n`;
 
 async function runTestCases(model: string) {
     let config;
@@ -39,7 +39,7 @@ async function runTestCases(model: string) {
     it(
         `runs a simple prompt with Model: ${model}`,
         async () => {
-            const prompt = 'Hello, what is the smallest country in the world?' + WORD_INCLUSION_PROMPT;
+            const prompt = WORD_INCLUSION_PROMPT + 'Hello, what is the smallest country in the world?';
             const result: any = await llmInference.prompt({
                 query: prompt,
                 params: { ...config.data, agentId },
@@ -54,10 +54,10 @@ async function runTestCases(model: string) {
     it(
         `runs a prompt with system message with Model: ${model}`,
         async () => {
-            const prompt = 'What can you do?' + WORD_INCLUSION_PROMPT;
+            const prompt = 'What can you do?';
 
             const consistentMessages = [
-                { role: TLLMMessageRole.System, content: 'You are a helpful assistant' },
+                { role: TLLMMessageRole.System, content: 'You are a helpful assistant' + WORD_INCLUSION_PROMPT },
                 { role: TLLMMessageRole.User, content: prompt },
             ];
 
@@ -74,8 +74,8 @@ async function runTestCases(model: string) {
     it(
         `handles long prompts correctly with Model: ${model}`,
         async () => {
-            let longPrompt = fs.readFileSync(testData.getDataPath('dummy-article.txt'), 'utf8');
-            longPrompt += '\n\nWhat is the main topic of this article?' + WORD_INCLUSION_PROMPT;
+            let longPrompt = WORD_INCLUSION_PROMPT + fs.readFileSync(testData.getDataPath('dummy-article.txt'), 'utf8');
+            longPrompt += '\n\nWhat is the main topic of this article?';
 
             const result = await llmInference.prompt({
                 query: longPrompt,
@@ -107,7 +107,7 @@ async function runTestCases(model: string) {
     it(
         `correctly handles special characters and Unicode with Model: ${model}`,
         async () => {
-            const specialCharsPrompt = 'Hello! こんにちは! 你好! مرحبا! 🌍🚀' + WORD_INCLUSION_PROMPT;
+            const specialCharsPrompt = WORD_INCLUSION_PROMPT + 'Hello! こんにちは! 你好! مرحبا! 🌍🚀';
             const result = await llmInference.prompt({
                 query: specialCharsPrompt,
                 params: { ...config.data, agentId },
@@ -121,7 +121,7 @@ async function runTestCases(model: string) {
     it(
         `handles prompts with code snippets correctly with Model: ${model}`,
         async () => {
-            const codePrompt = 'Explain this code:\n\nfunction add(a, b) {\n  return a + b;\n}' + WORD_INCLUSION_PROMPT;
+            const codePrompt = WORD_INCLUSION_PROMPT + 'Explain this code:\n\nfunction add(a, b) {\n  return a + b;\n}';
             const result = await llmInference.prompt({
                 query: codePrompt,
                 params: { ...config.data, agentId },
@@ -142,16 +142,9 @@ async function runTestCases(model: string) {
     );
 }
 
-const models = [
-    { provider: 'OpenAI', id: 'gpt-4o-mini' },
-    { provider: 'Anthropic', id: 'claude-3.5-haiku' },
-    { provider: 'GoogleAI', id: 'gemini-1.5-flash' },
-    { provider: 'Groq', id: 'gemma2-9b-it' },
-    // { provider: 'TogetherAI', id: 'meta-llama/Meta-Llama-3-8B-Instruct-Lite' },
-    // { provider: 'xAI', id: 'grok-beta' },
-];
+import testModels from './testModels';
 
-for (const model of models) {
+for (const model of testModels) {
     describe(`LLM Prompt Tests: ${model.provider} (${model.id})`, async () => {
         await runTestCases(model.id);
     });

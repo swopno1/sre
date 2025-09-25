@@ -1,6 +1,9 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { ResponsesApiInterface } from '@sre/LLMManager/LLM.service/connectors/openai/apiInterfaces/ResponsesApiInterface';
 import { TLLMParams, TLLMPreparedParams, ILLMRequestContext, TLLMMessageRole } from '@sre/types/LLM.types';
+import { checkIntegrationTestConsent } from '../../../utils/test-data-manager';
+
+checkIntegrationTestConsent();
 
 describe('ResponsesApiInterface - Unit Tests', () => {
     let apiInterface: ResponsesApiInterface;

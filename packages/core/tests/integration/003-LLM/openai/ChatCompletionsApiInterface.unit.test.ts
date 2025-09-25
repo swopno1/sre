@@ -1,6 +1,9 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { ChatCompletionsApiInterface } from '@sre/LLMManager/LLM.service/connectors/openai/apiInterfaces/ChatCompletionsApiInterface';
 import { TLLMParams, ILLMRequestContext, TLLMMessageRole } from '@sre/types/LLM.types';
+import { checkIntegrationTestConsent } from '../../../utils/test-data-manager';
+
+checkIntegrationTestConsent();
 
 describe('ChatCompletionsApiInterface - Unit Tests', () => {
     let apiInterface: ChatCompletionsApiInterface;
@@ -368,8 +371,8 @@ describe('ChatCompletionsApiInterface - Unit Tests', () => {
                     description: undefined,
                     parameters: {
                         type: 'object',
-                        properties: undefined,
-                        required: undefined,
+                        properties: {},
+                        required: [],
                     },
                 },
             });

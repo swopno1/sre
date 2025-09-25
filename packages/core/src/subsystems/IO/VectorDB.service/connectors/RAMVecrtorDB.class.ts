@@ -34,7 +34,10 @@ interface VectorData {
 }
 
 export type RAMVectorDBConfig = {
-    embeddings: TEmbeddings;
+    /**
+     * The embeddings model to use
+     */
+    embeddings?: TEmbeddings;
 };
 
 /**
@@ -53,11 +56,13 @@ export class RAMVectorDB extends VectorDBConnector {
     private accountConnector: AccountConnector;
     //private embeddingsProvider: OpenAIEmbeds;
 
-    // In-memory storage
-    private vectors: Record<string, VectorData[]> = {};
-    private namespaces: Record<string, IStorageVectorNamespace> = {};
-    private datasources: Record<string, Record<string, IStorageVectorDataSource>> = {};
-    private acls: Record<string, IACL> = {};
+    // In-memory storage (shared across connector instances)
+    private static vectors: Record<string, VectorData[]> = {};
+    private static namespaces: Record<string, IStorageVectorNamespace> = {};
+    private static datasources: Record<string, Record<string, IStorageVectorDataSource>> = {};
+    private static acls: Record<string, IACL> = {};
+
+    //embedder
     public embedder: BaseEmbedding;
 
     constructor(protected _settings: RAMVectorDBConfig) {
@@ -77,7 +82,7 @@ export class RAMVectorDB extends VectorDBConnector {
     public async getResourceACL(resourceId: string, candidate: IAccessCandidate): Promise<ACL> {
         //const teamId = await this.accountConnector.getCandidateTeam(AccessCandidate.clone(candidate));
         const preparedNs = this.constructNsName(candidate as AccessCandidate, resourceId);
-        const acl = this.acls[preparedNs];
+        const acl = RAMVectorDB.acls[preparedNs];
         const exists = !!acl;
 
         if (!exists) {
@@ -92,7 +97,7 @@ export class RAMVectorDB extends VectorDBConnector {
         //const teamId = await this.accountConnector.getCandidateTeam(acRequest.candidate);
         const preparedNs = this.constructNsName(acRequest.candidate as AccessCandidate, namespace);
 
-        if (!this.namespaces[preparedNs]) {
+        if (!RAMVectorDB.namespaces[preparedNs]) {
             const nsData = {
                 namespace: preparedNs,
                 displayName: namespace,
@@ -105,18 +110,18 @@ export class RAMVectorDB extends VectorDBConnector {
             };
 
             // Store namespace metadata in memory
-            this.namespaces[preparedNs] = nsData;
+            RAMVectorDB.namespaces[preparedNs] = nsData;
 
             // Initialize namespace vectors storage
-            this.vectors[preparedNs] = [];
+            RAMVectorDB.vectors[preparedNs] = [];
 
             // Initialize datasources storage for this namespace
-            this.datasources[preparedNs] = {};
+            RAMVectorDB.datasources[preparedNs] = {};
         }
 
         // Store ACL in memory
         const acl = new ACL().addAccess(acRequest.candidate.role, acRequest.candidate.id, TAccessLevel.Owner).ACL;
-        this.acls[preparedNs] = acl;
+        RAMVectorDB.acls[preparedNs] = acl;
 
         return new Promise<void>((resolve) => resolve());
     }
@@ -125,14 +130,14 @@ export class RAMVectorDB extends VectorDBConnector {
     protected async namespaceExists(acRequest: AccessRequest, namespace: string): Promise<boolean> {
         //const teamId = await this.accountConnector.getCandidateTeam(acRequest.candidate);
         const preparedNs = this.constructNsName(acRequest.candidate as AccessCandidate, namespace);
-        return !!this.namespaces[preparedNs];
+        return !!RAMVectorDB.namespaces[preparedNs];
     }
 
     @SecureConnector.AccessControl
     protected async getNamespace(acRequest: AccessRequest, namespace: string): Promise<IStorageVectorNamespace> {
         //const teamId = await this.accountConnector.getCandidateTeam(acRequest.candidate);
         const preparedNs = this.constructNsName(acRequest.candidate as AccessCandidate, namespace);
-        const nsData = this.namespaces[preparedNs];
+        const nsData = RAMVectorDB.namespaces[preparedNs];
         if (!nsData) {
             throw new Error(`Namespace ${namespace} not found`);
         }
@@ -144,7 +149,7 @@ export class RAMVectorDB extends VectorDBConnector {
         //const teamId = await this.accountConnector.getCandidateTeam(acRequest.candidate);
 
         // Filter namespaces by team
-        return Object.values(this.namespaces).filter((ns) => ns.candidateId === acRequest.candidate.id);
+        return Object.values(RAMVectorDB.namespaces).filter((ns) => ns.candidateId === acRequest.candidate.id);
     }
 
     @SecureConnector.AccessControl
@@ -153,10 +158,10 @@ export class RAMVectorDB extends VectorDBConnector {
         const preparedNs = this.constructNsName(acRequest.candidate as AccessCandidate, namespace);
 
         // Delete from memory
-        delete this.vectors[preparedNs];
-        delete this.namespaces[preparedNs];
-        delete this.datasources[preparedNs];
-        delete this.acls[preparedNs];
+        delete RAMVectorDB.vectors[preparedNs];
+        delete RAMVectorDB.namespaces[preparedNs];
+        delete RAMVectorDB.datasources[preparedNs];
+        delete RAMVectorDB.acls[preparedNs];
     }
 
     @SecureConnector.AccessControl
@@ -169,7 +174,7 @@ export class RAMVectorDB extends VectorDBConnector {
         //const teamId = await this.accountConnector.getCandidateTeam(acRequest.candidate);
         const preparedNs = this.constructNsName(acRequest.candidate as AccessCandidate, namespace);
 
-        if (!this.namespaces[preparedNs]) {
+        if (!RAMVectorDB.namespaces[preparedNs]) {
             throw new Error('Namespace does not exist');
         }
 
@@ -180,7 +185,7 @@ export class RAMVectorDB extends VectorDBConnector {
         }
 
         // Search in namespace data
-        const namespaceData = this.vectors[preparedNs] || [];
+        const namespaceData = RAMVectorDB.vectors[preparedNs] || [];
         const results: Array<{ id: string; score: number; values: number[]; metadata?: any; text: string }> = [];
 
         for (const vector of namespaceData) {
@@ -236,8 +241,8 @@ export class RAMVectorDB extends VectorDBConnector {
 
         const transformedSource = await this.embedder.transformSource(sourceWrapper, sourceType, acRequest.candidate as AccessCandidate);
 
-        if (!this.vectors[preparedNs]) {
-            this.vectors[preparedNs] = [];
+        if (!RAMVectorDB.vectors[preparedNs]) {
+            RAMVectorDB.vectors[preparedNs] = [];
         }
 
         const insertedIds: string[] = [];
@@ -251,11 +256,11 @@ export class RAMVectorDB extends VectorDBConnector {
             };
 
             // Check if vector with this ID already exists and update it
-            const existingIndex = this.vectors[preparedNs].findIndex((v) => v.id === source.id);
+            const existingIndex = RAMVectorDB.vectors[preparedNs].findIndex((v) => v.id === source.id);
             if (existingIndex >= 0) {
-                this.vectors[preparedNs][existingIndex] = vectorData;
+                RAMVectorDB.vectors[preparedNs][existingIndex] = vectorData;
             } else {
-                this.vectors[preparedNs].push(vectorData);
+                RAMVectorDB.vectors[preparedNs].push(vectorData);
             }
 
             insertedIds.push(source.id);
@@ -274,8 +279,10 @@ export class RAMVectorDB extends VectorDBConnector {
         if (isDeleteByFilter) {
             // Handle delete by filter (e.g., by datasourceId)
             if ('datasourceId' in deleteTarget && deleteTarget.datasourceId) {
-                if (this.vectors[preparedNs]) {
-                    this.vectors[preparedNs] = this.vectors[preparedNs].filter((vector) => vector.datasource !== deleteTarget.datasourceId);
+                if (RAMVectorDB.vectors[preparedNs]) {
+                    RAMVectorDB.vectors[preparedNs] = RAMVectorDB.vectors[preparedNs].filter(
+                        (vector) => vector.datasource !== deleteTarget.datasourceId
+                    );
                 }
             } else {
                 throw new Error('Unsupported delete filter');
@@ -283,8 +290,8 @@ export class RAMVectorDB extends VectorDBConnector {
         } else {
             // Handle delete by ID(s)
             const ids = Array.isArray(deleteTarget) ? deleteTarget : [deleteTarget];
-            if (this.vectors[preparedNs]) {
-                this.vectors[preparedNs] = this.vectors[preparedNs].filter((vector) => !ids.includes(vector.id));
+            if (RAMVectorDB.vectors[preparedNs]) {
+                RAMVectorDB.vectors[preparedNs] = RAMVectorDB.vectors[preparedNs].filter((vector) => !ids.includes(vector.id));
             }
         }
     }
@@ -330,10 +337,10 @@ export class RAMVectorDB extends VectorDBConnector {
         };
 
         // Store datasource metadata in memory
-        if (!this.datasources[formattedNs]) {
-            this.datasources[formattedNs] = {};
+        if (!RAMVectorDB.datasources[formattedNs]) {
+            RAMVectorDB.datasources[formattedNs] = {};
         }
-        this.datasources[formattedNs][dsId] = dsData;
+        RAMVectorDB.datasources[formattedNs][dsId] = dsData;
 
         return dsData;
     }
@@ -343,18 +350,13 @@ export class RAMVectorDB extends VectorDBConnector {
         //const teamId = await this.accountConnector.getCandidateTeam(acRequest.candidate);
         const formattedNs = this.constructNsName(acRequest.candidate as AccessCandidate, namespace);
 
-        // Get datasource info to get vector IDs
-        const ds = this.datasources[formattedNs]?.[datasourceId];
-        if (!ds) {
-            throw new Error(`Data source not found with id: ${datasourceId}`);
-        }
+        // Delete all vectors belonging to this datasource using a filter by datasourceId,
+        // so we remove vectors from any prior insert/update operations sharing the same datasource id
+        await this.delete(acRequest, namespace, { datasourceId });
 
-        // Delete all vectors belonging to this datasource using the delete method
-        await this.delete(acRequest, namespace, ds.vectorIds || []);
-
-        // Delete datasource metadata
-        if (this.datasources[formattedNs]) {
-            delete this.datasources[formattedNs][datasourceId];
+        // Delete datasource metadata (if present)
+        if (RAMVectorDB.datasources[formattedNs] && RAMVectorDB.datasources[formattedNs][datasourceId]) {
+            delete RAMVectorDB.datasources[formattedNs][datasourceId];
         }
     }
 
@@ -363,7 +365,7 @@ export class RAMVectorDB extends VectorDBConnector {
         //const teamId = await this.accountConnector.getCandidateTeam(acRequest.candidate);
         const preparedNs = this.constructNsName(acRequest.candidate as AccessCandidate, namespace);
 
-        const namespaceDatasources = this.datasources[preparedNs] || {};
+        const namespaceDatasources = RAMVectorDB.datasources[preparedNs] || {};
         return Object.values(namespaceDatasources);
     }
 
@@ -372,7 +374,7 @@ export class RAMVectorDB extends VectorDBConnector {
         //const teamId = await this.accountConnector.getCandidateTeam(acRequest.candidate);
         const preparedNs = this.constructNsName(acRequest.candidate as AccessCandidate, namespace);
 
-        const datasource = this.datasources[preparedNs]?.[datasourceId];
+        const datasource = RAMVectorDB.datasources[preparedNs]?.[datasourceId];
         return datasource; // Return undefined if not found, like MilvusVectorDB
     }
 

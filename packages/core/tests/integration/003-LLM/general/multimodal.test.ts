@@ -1,9 +1,10 @@
 import { Conversation } from '@sre/helpers/Conversation.helper';
 import fs from 'fs';
 import { describe, expect, it } from 'vitest';
-import { setupSRE } from '../../utils/sre';
-import { testData } from '../../utils/test-data-manager';
+import { setupSRE } from '../../../utils/sre';
+import { testData, checkIntegrationTestConsent } from '../../../utils/test-data-manager';
 
+checkIntegrationTestConsent();
 setupSRE();
 
 const TIMEOUT = 30000;
@@ -162,13 +163,9 @@ function runMultimodalTestCases(model: string) {
     );
 }
 
-const models = [
-    //{ provider: 'OpenAI', id: 'gpt-4o-mini' },
-    //{ provider: 'Anthropic', id: 'claude-3-5-haiku' },
-    { provider: 'GoogleAI', id: 'gemini-1.5-flash' },
-];
+import testModels from './testModels';
 
-for (const model of models) {
+for (const model of testModels) {
     describe(`LLM Multimodal Tests: ${model.provider} (${model.id})`, async () => {
         runMultimodalTestCases(model.id);
     });

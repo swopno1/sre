@@ -1,11 +1,13 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { LLMInference } from '@sre/LLMManager/LLM.inference';
 import { AccessCandidate } from '@sre/Security/AccessControl/AccessCandidate.class';
-import { setupSRE } from '../../utils/sre';
+import { setupSRE } from '../../../utils/sre';
 import EventEmitter from 'events';
 import { TLLMEvent } from '@sre/types/LLM.types';
 import { delay } from '@sre/utils/index';
+import { checkIntegrationTestConsent } from '../../../utils/test-data-manager';
 
+checkIntegrationTestConsent();
 /*
  * This file contains tests for the `toolRequest` and `streamRequest` functions.
  * These tests ensure that the responses include the correct tool information
@@ -397,16 +399,9 @@ async function runMultipleToolRequestTestCases(model: string, provider?: string)
     );
 }
 
-const models = [
-    { provider: 'OpenAI', id: 'gpt-4o-mini' },
-    //{ provider: 'Anthropic', id: 'claude-3-5-haiku-latest' },
-    //{ provider: 'GoogleAI', id: 'gemini-1.5-flash' },
-    //{ provider: 'Groq', id: 'gemma2-9b-it' },
-    //{ provider: 'TogetherAI', id: 'meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo' },
-    //{ provider: 'xAI', id: 'grok-beta' },
-];
+import testModels from './testModels';
 
-for (const model of models) {
+for (const model of testModels) {
     describe(`Tool Request Tests: ${model.provider} (${model.id})`, async () => {
         await runToolTestCases(model.id);
     });
@@ -422,12 +417,9 @@ for (const model of models) {
  * They may provide additional tool data in subsequent requests.
  * Tests for the sequence of tool responses are available in conversation.test.ts.
  */
-const modelsWithMultipleToolsResponse = [
-    { provider: 'OpenAI', id: 'gpt-4o-mini' },
-    //{ provider: 'Anthropic', id: 'claude-3-5-haiku-latest' },
-    //{ provider: 'TogetherAI', id: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo' },
-    /* { provider: 'xAI', id: 'grok-beta' }, */ // xAI is not able to handle multiple tools use properly
-];
+
+const modelsWithMultipleToolsResponse = testModels.filter((model) => model.features.includes('multiple-tools'));
+
 for (const model of modelsWithMultipleToolsResponse) {
     describe(`Multiple Tools Request Tests: ${model.provider} (${model.id})`, async () => {
         await runMultipleToolRequestTestCases(model.id, model.provider);

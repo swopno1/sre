@@ -801,8 +801,12 @@ export class Agent extends SDKObject {
             chatOptions.persist = false;
         }
 
-        return new Chat(chatOptions, this._data.defaultModel, this.data, {
+        if (!chatOptions.model) {
+            chatOptions.model = this._data.defaultModel;
+        }
+        return new Chat(chatOptions, this.data, {
             agentId: this._data.id,
+            baseUrl: chatOptions.baseUrl,
         });
     }
 

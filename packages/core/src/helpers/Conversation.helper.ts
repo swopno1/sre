@@ -121,6 +121,7 @@ export class Conversation extends EventEmitter {
             toolsStrategy?: (toolsConfig) => any;
             agentId?: string;
             agentVersion?: string;
+            baseUrl?: string;
         }
     ) {
         //TODO: handle loading previous session (messages)
@@ -149,6 +150,8 @@ export class Conversation extends EventEmitter {
         if (_settings?.store) {
             this._llmContextStore = _settings.store;
         }
+
+        this._baseUrl = _settings?.baseUrl;
 
         this._agentVersion = _settings?.agentVersion;
 
@@ -1006,7 +1009,12 @@ export class Conversation extends EventEmitter {
                 return map;
             }, {});
 
-        const spec = await agentDataConnector.getOpenAPIJSON(agentData, 'http://localhost/', this._agentVersion, true).catch((error) => null);
+        let baseUrl = this._baseUrl || 'http://localhost/';
+        if (baseUrl && !baseUrl.endsWith('/')) {
+            baseUrl += '/';
+        }
+
+        const spec = await agentDataConnector.getOpenAPIJSON(agentData, baseUrl, this._agentVersion, true).catch((error) => null);
         return this.patchSpec(spec);
     }
 
